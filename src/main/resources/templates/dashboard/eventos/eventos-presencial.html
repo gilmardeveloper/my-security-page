@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+
+<head th:replace="fragments/head :: head(~{::title},~{})">
+<title>ZEUS | Eventos presenciais</title>
+</head>
+
+<body>
+	<div class="container-scroller">
+		<!-- partial:../../partials/_navbar.html -->
+
+		<!-- navbar -->
+		<nav th:replace="fragments/navbar :: navbar-principal"></nav>
+		<!-- end navbar -->
+
+		<!-- partial -->
+		<div class="container-fluid page-body-wrapper">
+			<div class="row row-offcanvas row-offcanvas-right">
+				<!-- partial:../../partials/_settings-panel.html -->
+
+				<!-- sidebar sidebar-offcanvas -->
+				<nav th:replace="fragments/sidebar :: sidebar-principal"></nav>
+				<!-- end sidebar sidebar-offcanvas -->
+
+				<!-- content-wrapper -->
+				<div class="content-wrapper">
+					<!-- row -->
+					<div class="row">
+
+						<div class="col-lg-12" th:if="${alert != null}">
+									<div th:class="${alert}" role="alert">
+										<i class="mdi mdi-alert-circle"></i> <span
+											th:text="${message}"></span>
+										<button type="button" class="close" data-dismiss="alert"
+											aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+									</div>
+						</div>
+
+						 <!-- evento -->
+						<div class="col-md-6 col-lg-4 grid-margin stretch-card"
+							th:unless="${#lists.isEmpty(eventos)}"
+							th:each="evento : ${eventos}" 
+							th:if="${evento.permissoes.valida(usuario) and !evento.isFechado()}">
+							<div id="box"
+								th:class="${evento.estilo} != null ? ${evento.estilo.corFundoBox} : 'card bg-primary text-white'">
+								<img th:if="${evento.imagemDestaque} != null" class="card-img"
+									th:src="@{/imagens/evento/presencial/{id}/imagem-destaque.png(id=${evento.id})}"
+									style="opacity: 0.3;" alt="Card image">
+								<div
+									th:class="${evento.imagemDestaque} != null ? 'card-img-overlay' : 'card-body'">
+
+									<h6 id="titulo"
+										th:class="${evento.estilo} != null ? ${evento.estilo.corFundoTitulo} : 'card-title text-white font-weight-bold'"
+										th:text="${evento.titulo}"></h6>
+
+									<p id="descricao"
+										th:class="${evento.estilo} != null ? ${evento.estilo.corFundoDescricao} : 'card-text small'"
+										th:text="${evento.descricao}"></p>
+
+									<a th:unless="${evento.permissoes.precisaDeCodigo()}" th:href="@{/dashboard/eventos/presenciais/detalhes/{id}(id=${evento.id})}" class="btn btn-primary btn-rounded btn-fw"><i
+										class="icon-info"></i>Saber mais</a>
+
+									<a th:if="${evento.permissoes.precisaDeCodigo()}" href="#"
+										class="btn btn-primary btn-rounded btn-fw"
+										th:onclick="'abrirModal('+ ${evento.id} +')'"><i
+										class="icon-info"></i>Saber mais</a>	
+
+								</div>
+							</div>
+						</div>
+						<!-- end evento -->
+
+					</div>
+					<!-- end row -->
+
+					<div class="modal fade" id="modal-permissao-codigo" tabindex="-1"
+						role="dialog" aria-labelledby="modal-label"
+						aria-hidden="true">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="modal-label">Código de acesso</h5>
+									<button type="button" class="close" data-dismiss="modal"
+										aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div class="modal-body">
+									<div class="wrapper mb-2 mt-1">
+										<span class="badge badge-warning text-white">Nota : </span>
+										<p class="d-inline ml-3 text-muted">se você não tem o código, entre em contato com o responsável pelo evento</p>
+									</div>
+									<form id="formulario-imagem-top"
+										th:action="@{/dashboard/eventos/presenciais/detalhes}"
+										method="post">
+										
+										<input id="modal-id" type="hidden" name="id" /> 
+
+										<div class="form-group">
+											<label for="titulo">Código</label>
+											<input class="form-control" type="text" name="codigo" />
+										</div>	
+										
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary"
+										data-dismiss="modal">Cancelar</button>
+									<button type="submit" form="formulario-imagem-top"
+										class="btn btn-primary">Enviar</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- paginação inicio -->
+						<div class="col-lg-12">
+
+							<div class="pagination-area text-center"
+								th:unless="${#lists.isEmpty(eventos)}">
+								<ul class="pagination rounded" th:if="${eventos.totalPages} &gt; 1">
+
+									<li class="page-item"><a
+										th:href="@{/dashboard/eventos/presenciais/pagina/{page}/(page=0)}"
+										th:class="${eventos.first} == true ? 'btn disabled' : 'page-link' "><i
+											class="mdi mdi-chevron-left"></i></a></li>
+									<li class="page-item" th:if="(${eventos.number} - 1) &gt; -1"><a
+										class="page-link"
+										th:href="@{/dashboard/eventos/presenciais/pagina/{page}/(page=${eventos.number} - 1)}"
+										th:text="${eventos.number} - 1">&laquo;</a></li>
+
+									<li th:if="${eventos.number} &lt; (${eventos.totalPages} - 1)"
+										th:each="index : ${#numbers.sequence(eventos.number, eventos.number + 1)}"
+										th:class="${index} == ${eventos.number} ? 'page-item active' : 'page-item'"><a
+										class="page-link"
+										th:href="@{/dashboard/eventos/presenciais/pagina/{page}/(page=${index})}"
+										th:text="${index}">&laquo;</a></li>
+
+									<li class="page-item"><a
+										th:href="@{/dashboard/eventos/presenciais/pagina/{page}/(page=${eventos.totalPages} - 1)}"
+										th:class="${eventos.last} == true ? 'btn disabled' : 'page-link' "><i
+											class="mdi mdi-chevron-right"></i></a></li>
+								</ul>
+							</div>
+
+						</div>
+						<!-- paginação final -->
+
+
+				</div>
+				<!-- end content-wrapper -->
+				<!-- footer -->
+				<footer th:replace="fragments/footer :: footer"></footer>
+				<!-- end footer -->
+			</div>
+			<!-- row-offcanvas ends -->
+
+		</div>
+		<!-- page-body-wrapper ends -->
+	</div>
+	<!-- container-scroller -->
+	<span th:replace="fragments/base-script :: base"></span>
+	<span th:replace="fragments/base-script :: plugins"></span>
+
+	<script th:inline="javascript">
+
+	/*<![CDATA[*/
+	$(()=>{
+		
+	});
+
+	function abrirModal(id){
+
+		$.ajax({
+                  url: `/dashboard/eventos/presenciais/${id}/verifica/usuario/tem/codigo`,
+                  type: "GET", 
+
+              success: (result,status,xhr) => {
+                                                window.location.href = `/dashboard/eventos/presenciais/detalhes/${id}`
+                                              }, 
+              error: () => {
+
+              		$('#modal-id').val(id);
+					$('#modal-permissao-codigo').modal('show');   
+
+              }
+      });
+
+		   
+	}
+
+	
+	/*]]>*/
+	</script>
+</body>
+
+</html>

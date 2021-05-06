@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+
+<head th:replace="fragments/head :: head(~{::title},~{::link})">
+<title>ZEUS | Eventos</title>
+<link rel="stylesheet" th:href="@{~/css/select2.min.css}" />
+<link rel="stylesheet" th:href="@{~/css/select2-bootstrap.min.css}" />
+<link rel="stylesheet" th:href="@{~/css/summernote-bs4.css}" />
+</head>
+
+<body class="sidebar-dark">
+	<div class="container-scroller">
+		<!-- partial:../../partials/_navbar.html -->
+
+		<!-- navbar -->
+		<nav th:replace="fragments/navbar :: navbar-modulo-online"></nav>
+		<!-- end navbar -->
+
+		<!-- partial -->
+		<div class="container-fluid page-body-wrapper">
+			<div class="row row-offcanvas row-offcanvas-right">
+				<!-- partial:../../partials/_settings-panel.html -->
+
+				<!-- sidebar sidebar-offcanvas -->
+				<nav th:replace="fragments/sidebar :: sidebar-modulo-online-admin"></nav>
+				<!-- end sidebar sidebar-offcanvas -->
+
+				<!-- content-wrapper -->
+				<div class="content-wrapper">
+
+					<div class="col-12 grid-margin">
+						<nav aria-label="breadcrumb" role="navigation">
+				            <ol class="breadcrumb breadcrumb-custom bg-inverse-primary">
+				            <li class="breadcrumb-item"><a th:href="@{/dashboard/admin/eventos/online}">Eventos Online</a></li>
+				            <li class="breadcrumb-item"><a th:href="@{/dashboard/admin/eventos/online/detalhes/{id}(id=${evento.id})}">Detalhes</a></li>
+				            <li class="breadcrumb-item active" aria-current="page"><span>Módulos</span></li>
+				            </ol>
+				        </nav>
+			        </div>
+
+					<div class="container-fluid">
+						<div class="row">
+
+							<div class="col-lg-12" th:if="${alert != null}">
+								<div th:class="${alert}" role="alert">
+									<i class="mdi mdi-alert-circle"></i> <span th:text="${message}"></span>
+									<button type="button" class="close" data-dismiss="alert"
+										aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+							</div>
+
+							<div class="col-lg-12" th:if="${usuario.podeAlterar('eventosOnline') or usuario.podeAlterar('tudo')}">
+								<ul class="nav">
+									<li class="nav-item"><a class="nav-link" href="#"
+										data-toggle="modal" data-target="#modal-editor-extra">+
+											Extra</a></li>
+									<li class="nav-item"><a class="nav-link" th:href="@{/dashboard/admin/eventos/online/atividades/{id}(id=${evento.id})}">+ Atividades</a></li>
+								</ul>
+							</div>
+
+							<div class="col-lg-12">
+								<div class="card mb-3">
+									<div class="card-header bg-dark">
+										<h3 class="card-text text-white">ATIVIDADE-<span th:text="${atividade.posicao}"></span>: <span th:text="${atividade.titulo}"></span></h3>
+									</div>
+									<div class="card-body">
+										
+										<div th:if="${atividade.urlVideo != ''}" class="embed-responsive embed-responsive-16by9 mb-4" th:utext="${atividade.urlVideo}">
+										</div>
+
+										<div class="pt-2 border-top" th:if="${atividade.conteudo != null}" th:utext="${atividade.conteudo}"></div>
+
+									</div>
+									<div class="card-footer bg-light text-right">
+										<a class="btn btn-lg btn-success" th:href="@{/dashboard/admin/eventos/online/modulos/{id}/proxima-atividade/{posicao}(id=${modulo.id},posicao=${atividade.posicao})}">Próxima atividade</a>
+									</div>
+								</div>
+							</div>
+
+						</div>
+
+					</div>
+
+					<!-- modal editor sobre -->
+					<div th:if="${usuario.podeAlterar('eventosOnline') or usuario.podeAlterar('tudo')}" class="modal fade" id="modal-editor-extra" tabindex="-1"
+						role="dialog" aria-labelledby="modal-label-editor-extra"
+						aria-hidden="true">
+						<div class="modal-dialog modal-lg">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="modal-label-editor-extra">Adicione conteúdo extra, leitura adicional ou a trancrição do vídeo</h5>
+									<button type="button" class="close" data-dismiss="modal"
+										aria-label="Close">
+										<span aria-hidden="true">&times;</span>
+									</button>
+								</div>
+								<div class="modal-body">
+									<form
+										th:action="@{/dashboard/admin/eventos/online/atividades/conteudo/salvar}"
+										id="formulario-editor-sobre" method="post">
+										<input type="hidden" name="id"
+											th:value="${atividade.id}" />
+										<textarea id="summernote" name="conteudo"
+											th:utext="${atividade.conteudo != null} ?  ${atividade.conteudo} : ''"></textarea>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary"
+										data-dismiss="modal">Cancelar</button>
+									<button type="submit" form="formulario-editor-sobre"
+										class="btn btn-primary">Salvar</button>
+								</div>
+							</div>
+						</div>
+
+					</div>
+
+				</div>
+				<!-- end content-wrapper -->
+
+				<!-- footer -->
+				<footer th:replace="fragments/footer :: footer"></footer>
+				<!-- end footer -->
+			</div>
+			<!-- row-offcanvas ends -->
+		</div>
+		<!-- page-body-wrapper ends -->
+	</div>
+	<!-- container-scroller -->
+	<span th:replace="fragments/base-script :: base"></span>
+	<script th:src="@{~/js/select2.min.js}"></script>
+	<script th:src="@{~/js/summernote-bs4.min.js}"></script>
+	<span th:replace="fragments/base-script :: plugins"></span>
+
+	<script>
+
+	    $(document).ready(function(){
+
+	    $('#select-modulos').on('change', alterarModulo);
+
+	     $('#summernote').summernote({
+	     	 toolbar: [
+	     	 	['style', ['bold', 'italic', 'underline', 'clear']],
+			    ['font', ['strikethrough', 'superscript', 'subscript']],
+			    ['fontsize', ['fontsize']],
+			    ['fontname', ['fontname']],
+			    ['color', ['color']],
+			    ['para', ['ul', 'ol', 'paragraph']],
+			    ['picture', ['picture']],
+			    ['link', ['link']],
+			    ['video', ['video']],
+			    ['table', ['table']],
+			    ['codeview', ['codeview']],
+	     	],
+	     	dialogsInBody: true,
+			dialogsFade: false,
+	     	height: 300,
+	     	tabsize: 2
+	     });
+
+	    });
+
+	    function alterarModulo(){
+			var id = $('#select-modulos').val();
+			window.location.href = `/dashboard/admin/eventos/online/modulos/${id}`;
+		}
+  	</script>
+
+	<script th:inline="javascript">
+
+	/*<![CDATA[*/
+		(function($) {
+			  'use strict';
+
+			  if($(".js-select-single").length){
+			    $(".js-select-single").select2();
+			  }
+		})(jQuery);
+	/*]]>*/
+	</script>
+
+</body>
+
+</html>
